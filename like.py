@@ -14,7 +14,7 @@ from telebot import types
 
 # ================= CONFIGURATION =================
 # SECURITY: keep secrets in environment variables instead of hard-coding them.
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8730313708:AAHO5mh-fdMoKtnv5n1ojBxFYcL6E5i_z80")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8730313708:AAG2CtkR4NxC4NEVZeVGq3aZqaXP2-ol_ls")
 OWNER_IDS = [7210827441]
 
 # Groups where normal users may use the bot.
@@ -487,7 +487,12 @@ def welcome(msg):
         "➥ 🤖 /setautolikeapi &lt;api_url&gt; → /autolike\n"
         "➥ 🤖 /setv1autolikeapi &lt;api_url&gt; → /v1autolike\n"
         "➥ 🤖 /setv2autolikeapi &lt;api_url&gt; → /v2autolike\n"
-        "➥ 📡 /api\n\n"
+        "➥ 📡 /api\n"
+        "➥ ➕ /addgroup &lt;group_id&gt;\n"
+        "➥ ❌ /removegroup &lt;group_id&gt;\n"
+        "➥ 🏘️ /grouplist\n"
+        "➥ 📁 /getfile\n"
+        "➥ ♻️ /restore\n\n"
         "⚡ <b>ADMIN COMMANDS</b>\n"
         "━━━━━━━━━━━━━━━━━━\n"
         "➥ 🚀 /like &lt;region&gt; &lt;uid&gt;\n"
@@ -504,14 +509,9 @@ def welcome(msg):
         "➥ ⚡ /force_like  (alias: /runnow)\n"
         "➥ ⏰ /settime &lt;HH:MM&gt;\n"
         "➥ 🎯 /setslots &lt;number&gt;\n"
-        "➥ ➕ /addgroup &lt;group_id&gt;\n"
-        "➥ ❌ /removegroup &lt;group_id&gt;\n"
-        "➥ 🏘️ /grouplist\n"
         "➥ ⚙️ /settings\n"
         "➥ 🔔 /toggle_user_notify\n"
         "➥ ✉️ /sndmsg &lt;group_id&gt; &lt;message&gt;\n"
-        "➥ 📁 /getfile\n"
-        "➥ ♻️ /restore\n"
         "➥ 🚀 /likeon /likeoff\n"
         "➥ 📢 /spam &lt;message&gt; [1-3] (admin test only)\n\n"
         "🔒 <b>FORCE JOIN</b>\n"
@@ -1553,7 +1553,7 @@ def _restore_database_from_document(msg, document):
 
 @bot.message_handler(commands=["restore"])
 def restore_database(msg):
-    if not require_admin(msg):
+    if not require_owner(msg):
         return
 
     # /restore can be used in either of these ways:
@@ -1579,7 +1579,7 @@ def receive_restore_file(msg):
     if key not in pending_restore:
         return
 
-    if not require_admin(msg):
+    if not require_owner(msg):
         pending_restore.discard(key)
         return
 
@@ -1589,7 +1589,7 @@ def receive_restore_file(msg):
 
 @bot.message_handler(commands=["getfile"])
 def get_file(msg):
-    if not require_admin(msg):
+    if not require_owner(msg):
         return
 
     # /getfile sends the CURRENT DATABASE, not the Python bot source file.
