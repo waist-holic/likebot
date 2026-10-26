@@ -14,7 +14,7 @@ from telebot import types
 
 # ================= CONFIGURATION =================
 # SECURITY: keep secrets in environment variables instead of hard-coding them.
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8730313708:AAG2CtkR4NxC4NEVZeVGq3aZqaXP2-ol_ls")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8730313708:AAHbFakUltOjDFXsU44lv8V_wRsfwWwaj84")
 OWNER_IDS = [7210827441]
 
 # Groups where normal users may use the bot.
@@ -492,10 +492,7 @@ def welcome(msg):
         "➥ ❌ /removegroup &lt;group_id&gt;\n"
         "➥ 🏘️ /grouplist\n"
         "➥ 📁 /getfile\n"
-        "➥ ♻️ /restore\n\n"
-        "⚡ <b>ADMIN COMMANDS</b>\n"
-        "━━━━━━━━━━━━━━━━━━\n"
-        "➥ 🚀 /like &lt;region&gt; &lt;uid&gt;\n"
+        "➥ ♻️ /restore\n"
         "➥ 🚀 /v1like &lt;region&gt; &lt;uid&gt;\n"
         "➥ 🚀 /v2like &lt;region&gt; &lt;uid&gt;\n"
         "➥ 🤖 /autolike &lt;region&gt; &lt;uid&gt; &lt;likes&gt; &lt;days&gt; [user_id]\n"
@@ -503,17 +500,18 @@ def welcome(msg):
         "➥ 🤖 /v2autolike &lt;region&gt; &lt;uid&gt; &lt;likes&gt; &lt;days&gt; [user_id]\n"
         "➥ ⏩ /extenduid &lt;uid&gt; &lt;likes&gt;\n"
         "➥ ❌ /remove_autolike &lt;uid&gt;\n"
+        "➥ ⚡️ /force_like (alias: /runnow)\n"
+        "➥ ⏰ /settime HH:MM\n"
+        "➥ 🎯 /setslots &lt;number&gt;\n"
+        "➥ ✉️ /sndmsg &lt;group_id&gt; &lt;message&gt;\n"
+
+        "⚡ <b>ADMIN COMMANDS</b>\n"
+        "━━━━━━━━━━━━━━━━━━\n"
+        "➥ 🚀 /like &lt;region&gt; &lt;uid&gt;\n"
         "➥ 📋 /autolike_list — AutoLike UIDs\n"
         "➥ 📋 /v1autolike_list — V1 AutoLike UIDs\n"
         "➥ 📋 /v2autolike_list — V2 AutoLike UIDs\n"
-        "➥ ⚡ /force_like  (alias: /runnow)\n"
-        "➥ ⏰ /settime &lt;HH:MM&gt;\n"
-        "➥ 🎯 /setslots &lt;number&gt;\n"
-        "➥ ⚙️ /settings\n"
-        "➥ 🔔 /toggle_user_notify\n"
-        "➥ ✉️ /sndmsg &lt;group_id&gt; &lt;message&gt;\n"
         "➥ 🚀 /likeon /likeoff\n"
-        "➥ 📢 /spam &lt;message&gt; [1-3] (admin test only)\n\n"
         "🔒 <b>FORCE JOIN</b>\n"
         "━━━━━━━━━━━━━━━━━━\n"
         "➥ ➕ /addforcejoin &lt;chat_id&gt; [invite_link]\n"
@@ -858,14 +856,14 @@ def like_with_balance(msg):
 
 @bot.message_handler(commands=["v1like"])
 def v1_like(msg):
-    if not require_admin(msg):
+    if not require_owner(msg):
         return
     process_manual_like(msg, balance_tracking=False, api_version="v1")
 
 
 @bot.message_handler(commands=["v2like"])
 def v2_like(msg):
-    if not require_admin(msg):
+    if not require_owner(msg):
         return
     process_manual_like(msg, balance_tracking=False, api_version="v2")
 
@@ -882,31 +880,6 @@ def call_external_template(api_url, uid, region):
         return None, f"Network Error: {e}"
     except ValueError:
         return None, "Invalid JSON response from API."
-
-
-@bot.message_handler(commands=["spam"])
-def controlled_spam_test(msg):
-    # Safe, admin-only test: maximum 3 messages in the current chat.
-    if not is_admin(msg.from_user.id):
-        return
-    if not chat_allowed(msg):
-        bot.reply_to(msg, "🚫 This bot is available only in authorized groups.")
-        return
-    parts = msg.text.split()[1:]
-    if not parts:
-        bot.reply_to(msg, "Usage: /spam MESSAGE [1-3]")
-        return
-    count = 1
-    if parts[-1].isdigit():
-        count = max(1, min(int(parts[-1]), 3))
-        parts = parts[:-1]
-    message = " ".join(parts).strip()
-    if not message:
-        bot.reply_to(msg, "Usage: /spam MESSAGE [1-3]")
-        return
-    for _ in range(count):
-        bot.send_message(msg.chat.id, message)
-        time.sleep(0.5)
 
 
 @bot.message_handler(commands=["status"])
@@ -942,7 +915,7 @@ def parse_int(value, name):
 
 @bot.message_handler(commands=["autolike", "v1autolike", "v2autolike"])
 def add_autolike(msg):
-    if not require_admin(msg):
+    if not require_owner(msg):
         return
     args = msg.text.split()
     command = args[0].split("@", 1)[0].lower()
@@ -1007,7 +980,7 @@ def add_autolike(msg):
 
 @bot.message_handler(commands=["extenduid"])
 def extend_uid(msg):
-    if not require_admin(msg):
+    if not require_owner(msg):
         return
     args = msg.text.split()
     if len(args) != 3:
@@ -1029,7 +1002,7 @@ def extend_uid(msg):
 
 @bot.message_handler(commands=["remove_autolike", "remove"])
 def remove_autolike(msg):
-    if not require_admin(msg):
+    if not require_owner(msg):
         return
     args = msg.text.split()
     if len(args) != 2:
@@ -1163,7 +1136,7 @@ def my_autolikes(msg):
 
 @bot.message_handler(commands=["force_like", "runnow"])
 def force_like(msg):
-    if not require_admin(msg):
+    if not require_owner(msg):
         return
     rows = q(
         "SELECT uid,region,chat_id,expire,requested_likes,notify_user,notify_enabled,api_version "
@@ -1179,7 +1152,7 @@ def force_like(msg):
 
 @bot.message_handler(commands=["settime"])
 def set_time(msg):
-    if not require_admin(msg):
+    if not require_owner(msg):
         return
     args = msg.text.split()
     if len(args) != 2:
@@ -1226,7 +1199,7 @@ def set_global_limit(msg):
 
 @bot.message_handler(commands=["setslots"])
 def set_slots(msg):
-    if not require_admin(msg):
+    if not require_owner(msg):
         return
     args = msg.text.split()
     if len(args) != 2:
@@ -1238,54 +1211,6 @@ def set_slots(msg):
         bot.reply_to(msg, f"✅ Max AutoLike UID slots: <b>{slots}</b>")
     except ValueError:
         bot.reply_to(msg, "❌ NUMBER must be numeric.")
-
-
-@bot.message_handler(commands=["toggle_user_notify"])
-def toggle_user_notify(msg):
-    if not require_admin(msg):
-        return
-    rows = q(
-        "SELECT DISTINCT notify_enabled FROM autolikes WHERE notify_user=?",
-        (msg.from_user.id,),
-        fetchall=True,
-    )
-    current = bool(rows[0][0]) if rows else True
-    new_value = 0 if current else 1
-    q(
-        "UPDATE autolikes SET notify_enabled=? WHERE notify_user=?",
-        (new_value, msg.from_user.id),
-        commit=True,
-    )
-    bot.reply_to(msg, f"🔔 Your AutoLike notifications are now <b>{'ON' if new_value else 'OFF'}</b>.")
-
-
-@bot.message_handler(commands=["settings"])
-def settings_cmd(msg):
-    if not require_admin(msg):
-        return
-    h = int(setting("default_hour", DEFAULT_HOUR))
-    m = int(setting("default_minute", DEFAULT_MINUTE))
-    slots = int(setting("max_slots", MAX_UID_SLOTS))
-    v1_config = bool(get_like_api("v1"))
-    v2_config = bool(get_like_api("v2"))
-    bot.reply_to(
-        msg,
-        "⚙️ <b>BOT SETTINGS</b>\n\n"
-        f"⏰ AutoLike time: {h:02d}:{m:02d} IST\n"
-        f"📦 UID slots: {slots}\n"
-        f"📊 Daily API limit: {get_global_daily_limit()}\n"
-        f"👤 Public /like user limit: 1 per day\n"
-        f"❤️ Public /like: {'ON' if LIKE_ENABLED else 'OFF'}\n"
-        f"🔌 V1 Like API: {'CONFIGURED' if v1_config else 'MISSING'}\n"
-        f"🔌 V2 Like API: {'CONFIGURED' if v2_config else 'MISSING'}\n"
-        f"🔌 AutoLike API: {'CONFIGURED' if get_autolike_api('auto') else 'MISSING'}\n"
-         f"🔌 V1 AutoLike API: {'CONFIGURED' if get_autolike_api('v1') else 'MISSING'}\n"
-         f"🔌 V2 AutoLike API: {'CONFIGURED' if get_autolike_api('v2') else 'MISSING'}\n"
-        f"👀 Visit API: {'CONFIGURED' if visit_config else 'MISSING'}\n"
-        f"👤 Info API: {'CONFIGURED' if info_config else 'MISSING'}\n"
-        f"🔒 Force Join: {len(get_force_join_targets())} target(s)\n"
-        f"🏢 Allowed groups: {len(get_allowed_groups())}",
-    )
 
 
 @bot.message_handler(commands=["likeon"])
@@ -1470,7 +1395,7 @@ def plans(msg):
 # ================= MESSAGING / FILE =================
 @bot.message_handler(commands=["sndmsg"])
 def send_group_message(msg):
-    if not require_admin(msg):
+    if not require_owner(msg):
         return
     args = msg.text.split(maxsplit=2)
     if len(args) != 3:
