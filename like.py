@@ -14,7 +14,7 @@ from telebot import types
 
 # ================= CONFIGURATION =================
 # SECURITY: keep secrets in environment variables instead of hard-coding them.
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8730313708:AAFR7RF4RnYFDD8a-G3ry5zx_jmfZ8uMC_4")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8730313708:AAGrImtjWRr4J7ua62nbAMPOQAUVQnaPUfw")
 OWNER_IDS = [7210827441]
 
 # Groups where normal users may use the bot.
